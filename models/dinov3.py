@@ -40,17 +40,20 @@ class DINOv3Encoder(Encoder):
 
             self.model.load_state_dict(state_dict, strict=False)
 
-        # normalizacja taka jak dla ImageNet
-        self.mean = np.array([0.485, 0.456, 0.406])
-        self.std = np.array([0.229, 0.224, 0.225])
-
-    def transform(self, img):
+        def transform(self, img):
         """Transformacja obrazu do formatu wejściowego DINOv3"""
+        # normalizacja taka jak dla ImageNet
+        imagenet_mean = np.array([0.485, 0.456, 0.406])
+        imagenet_std = np.array([0.229, 0.224, 0.225])
+
+        cifar_mean = [0.4914, 0.4822, 0.4465]
+        cifar_std = [0.2023, 0.1994, 0.2010]
         img = TF.Compose(
             [
                 TF.Resize((224, 224), TF.InterpolationMode.BICUBIC),
                 TF.ToTensor(),
-                TF.Normalize(self.mean, self.std),
+                TF.Normalize(cifar_mean, cifar_std),
             ]
         )(img)
         return img
+
