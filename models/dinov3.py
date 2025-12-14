@@ -10,7 +10,7 @@ from .encoder import Encoder
 
 
 class DINOv3Encoder(Encoder):
-    def setup(self, dino_size="b", repo_dir="./dinov3", dino_ckpt=None):
+    def setup(self, dino_size="l", repo_dir="./dinov3", dino_ckpt=None):
         """
         dino_size: 'b' (ViT-B/16) or 's' (ViT-S/16)
         repo_dir: local path to DINOv3 repo containing hubconf.py
@@ -19,11 +19,16 @@ class DINOv3Encoder(Encoder):
         self.dino_size = dino_size
         self.repo_dir = repo_dir
         self.dino_ckpt = dino_ckpt
+        self.dino_ckpt = "/home/tadeusz/Downloads/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth" #hardcoded
         print(self.dino_ckpt, self.dino_size, "sssssssssssssssssssssssssssssssss")
         #Załaduj model z lokalnego repo DINOv3
         if self.dino_size == "b":
             self.model = torch.hub.load(
                 self.repo_dir, "dinov3_vitb16", source="local", pretrained=False #żeby wczytać własne wagi
+            )
+        elif self.dino_size == "l":
+            self.model = torch.hub.load(
+                self.repo_dir, "dinov3_vitl16", source="local", pretrained=False
             )
         else:
             self.model = torch.hub.load(
@@ -38,9 +43,11 @@ class DINOv3Encoder(Encoder):
             else:
                 state_dict = torch.load(self.dino_ckpt, map_location="cpu")
 
-            self.model.load_state_dict(state_dict, strict=False)
+            self.model.load_state_dict(state_dict, strict=True)
 
-        def transform(self, img):
+        self.model.eval()
+
+    def transform(self, img):
         """Transformacja obrazu do formatu wejściowego DINOv3"""
         # normalizacja taka jak dla ImageNet
         imagenet_mean = np.array([0.485, 0.456, 0.406])
@@ -55,5 +62,6 @@ class DINOv3Encoder(Encoder):
                 TF.Normalize(cifar_mean, cifar_std),
             ]
         )(img)
+
         return img
 
